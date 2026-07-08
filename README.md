@@ -723,40 +723,6 @@ job-market-data-analyst-dashboard/
 
 ---
 
-## How to Run Locally
-
-Clone this repository:
-
-```bash
-git clone https://github.com/your-username/job-market-data-analyst-dashboard.git
-cd job-market-data-analyst-dashboard
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run the Streamlit app:
-
-```bash
-streamlit run app.py
-```
-
----
-
-## Requirements
-
-```text
-streamlit
-pandas
-numpy
-matplotlib
-```
-
----
-
 ## Notes and Limitations
 
 Several results should be interpreted carefully:
