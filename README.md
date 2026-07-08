@@ -676,7 +676,7 @@ This project produces several outputs:
 
 ### 1. Google Colab Analysis Notebook
 
-Contains the full analysis process:
+Contains the full analysis process: https://colab.research.google.com/drive/1GhbBukOWxj6gZEVNl4UiGFMtXDaOmsGj?usp=sharing
 
 - Data loading
 - Data understanding
@@ -690,15 +690,8 @@ Contains the full analysis process:
 
 ### 2. Streamlit Dashboard
 
-An interactive dashboard for presenting insights in a clean and readable format.
+https://job-market-data-analyst-dashboard.streamlit.app/
 
-### 3. Static HTML Dashboard
-
-A static version of the dashboard for easy sharing and presentation.
-
-### 4. GitHub Repository
-
-Contains source code, prepared datasets, documentation, and instructions to run the project.
 
 ---
 
