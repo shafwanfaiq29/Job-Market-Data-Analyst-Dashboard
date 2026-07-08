@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Analyst Job Market Dashboard</title>
+  <meta name="description" content="Static HTML dashboard for Data Analyst job market analysis: salary, skills, remote work, countries, and opportunity score." />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 23, 42, .82);
+      --panel2: rgba(2, 6, 23, .78);
+      --border: rgba(148, 163, 184, .20);
+      --text: #eef6ff;
+      --muted: #9fb1c9;
+      --soft: #cfdbeb;
+      --blue: #38bdf8;
+      --violet: #a78bfa;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --rose: #fb7185;
+      --shadow: 0 26px 90px rgba(0,0,0,.32);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 5% 5%, rgba(56,189,248,.24), transparent 30%),
+        radial-gradient(circle at 96% 0%, rgba(167,139,250,.24), transparent 28%),
+        radial-gradient(circle at 50% 96%, rgba(34,197,94,.10), transparent 28%),
+        linear-gradient(145deg, #06111f 0%, #0f172a 45%, #070b18 100%);
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+    .shell { width: min(1240px, calc(100% - 42px)); margin: 0 auto; }
+    .nav {
+      position: sticky; top: 0; z-index: 20;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7, 17, 31, .72);
+      backdrop-filter: blur(18px);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 14px 0; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 850; letter-spacing: -.03em; }
+    .brand-mark { width: 38px; height: 38px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, var(--blue), var(--violet)); box-shadow: 0 12px 34px rgba(56,189,248,.25); }
+    .nav-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .nav-links a, .btn {
+      border: 1px solid var(--border); background: rgba(15,23,42,.62); color: var(--soft); padding: 9px 12px; border-radius: 999px; font-size: 13px; transition: .18s ease;
+    }
+    .nav-links a:hover, .btn:hover { color: #fff; border-color: rgba(56,189,248,.65); transform: translateY(-1px); }
+    .hero { padding: 76px 0 38px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: #bae6fd; border: 1px solid rgba(56,189,248,.32); background: rgba(14,165,233,.10); border-radius: 999px; padding: 8px 12px; font-size: 13px; margin-bottom: 18px; }
+    h1 { font-size: clamp(42px, 7.2vw, 84px); line-height: .93; letter-spacing: -.075em; margin: 0; max-width: 980px; }
+    .hero p { font-size: clamp(16px,2vw,20px); line-height: 1.65; color: var(--soft); max-width: 880px; margin: 22px 0 0; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .primary { background: linear-gradient(135deg, #38bdf8, #8b5cf6); border: 0; color: #fff; font-weight: 800; padding: 12px 16px; }
+    .subnote { color: var(--muted); font-size: 13px; margin-top: 18px; }
+    section { padding: 40px 0; }
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 20px; }
+    .section-title { margin: 0; font-size: clamp(26px,3vw,38px); letter-spacing: -.045em; }
+    .section-desc { margin: 8px 0 0; color: var(--muted); max-width: 830px; line-height: 1.65; }
+    .grid { display: grid; gap: 18px; }
+    .kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .three-col { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      position: relative; overflow: hidden; background: linear-gradient(180deg, rgba(15,23,42,.88), rgba(15,23,42,.66));
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); backdrop-filter: blur(18px);
+    }
+    .card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 0% 0%, rgba(56,189,248,.10), transparent 35%); }
+    .card > * { position: relative; }
+    .card h3 { margin: 0 0 10px; font-size: 18px; letter-spacing: -.02em; }
+    .card p { color: var(--muted); line-height: 1.65; margin: 0; }
+    .kpi .label { color: var(--muted); font-size: 13px; margin-bottom: 9px; }
+    .kpi .value { font-size: 30px; font-weight: 900; letter-spacing: -.05em; }
+    .kpi .hint { color: var(--soft); font-size: 13px; margin-top: 8px; line-height: 1.45; }
+    .mini-card { padding: 18px; }
+    .mini-card .num { font-size: 26px; font-weight: 900; letter-spacing: -.04em; }
+    .chart-card { min-height: 440px; }
+    .chart-wrap { position: relative; height: 330px; margin-top: 12px; }
+    .chart-wrap.tall { height: 430px; }
+    .chart-note { color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 12px; }
+    .insight { border-left: 4px solid var(--blue); background: rgba(56,189,248,.08); padding: 15px 16px; border-radius: 14px; color: var(--soft); line-height: 1.65; }
+    .insight strong { color: #fff; }
+    .warning { border-left-color: var(--amber); background: rgba(245,158,11,.08); }
+    .green { border-left-color: var(--green); background: rgba(34,197,94,.08); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 18px; background: rgba(2,6,23,.38); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { padding: 13px 14px; border-bottom: 1px solid rgba(148,163,184,.15); text-align: left; white-space: nowrap; }
+    th { color: #d7e1ef; background: rgba(15,23,42,.78); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    td { color: #e2e8f0; }
+    tr:last-child td, tr:last-child th { border-bottom: 0; }
+    .pill { display: inline-flex; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; border: 1px solid transparent; }
+    .core { color: #bae6fd; background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.32); }
+    .bi { color: #ddd6fe; background: rgba(167,139,250,.12); border-color: rgba(167,139,250,.32); }
+    .premium { color: #bbf7d0; background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.32); }
+    .support { color: #fde68a; background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.32); }
+    .rank { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 10px; font-weight: 900; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #fff; }
+    .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; border: 1px solid var(--border); background: rgba(2,6,23,.54); color: #bae6fd; padding: 16px; border-radius: 16px; overflow-x: auto; }
+    .roadmap { counter-reset: step; }
+    .step { padding-left: 60px; }
+    .step::after { counter-increment: step; content: counter(step); position: absolute; left: 20px; top: 22px; width: 38px; height: 38px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, var(--blue), var(--violet)); color: #fff; font-weight: 900; }
+    .footer { padding: 34px 0 60px; color: var(--muted); text-align: center; font-size: 14px; }
+    @media (max-width: 1000px) { .kpi-grid, .two-col, .three-col { grid-template-columns: 1fr; } .nav-inner { align-items: flex-start; flex-direction: column; } h1 { letter-spacing: -.055em; } }
+    @media (max-width: 580px) { .shell { width: min(100% - 24px, 1240px); } .chart-wrap { height: 300px; } .chart-wrap.tall { height: 390px; } .nav-links a { font-size: 12px; padding: 8px 10px; } }
+    @media print { .nav, .hero-actions { display:none; } body { background:#fff; color:#111827; } .card { box-shadow:none; background:#fff; color:#111827; border-color:#e5e7eb; } .card p, .section-desc, .subnote, .footer { color:#475569; } }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="shell nav-inner">
+      <a href="#top" class="brand"><span class="brand-mark">📊</span><span>Job Market Intelligence</span></a>
+      <div class="nav-links">
+        <a href="#summary">Summary</a>
+        <a href="#salary">Salary</a>
+        <a href="#analyst">Analyst Focus</a>
+        <a href="#skills">Skills</a>
+        <a href="#opportunity">Opportunity</a>
+        <a href="#roadmap">Roadmap</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top">
+    <header class="shell hero">
+      <div class="eyebrow">Dashboard • Data Analyst & Data Science Job Market</div>
+      <h1>Data Analyst Job Market Dashboard</h1>
+      <p>
+        A static HTML dashboard built from the analysis results: role demand, salary benchmarks, experience-level impact, remote work patterns, country compensation, required skills, and a practical career opportunity score.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#summary">Explore dashboard</a>
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+      <div class="subnote">All numbers shown here are taken from the analysis outputs we calculated. No extra unsupported estimates are added.</div>
+    </header>
+
+    <section id="summary">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Executive Summary</h2>
+            <p class="section-desc">The dashboard is structured for quick presentation: what roles dominate the market, what salary patterns appear, and which skills are most valuable for aspiring Data Analysts.</p>
+          </div>
+        </div>
+        <div class="grid kpi-grid">
+          <div class="card kpi"><div class="label">Salary records</div><div class="value">607</div><div class="hint">2020–2022 salary dataset</div></div>
+          <div class="card kpi"><div class="label">Overall median salary</div><div class="value">$101,570</div><div class="hint">Based on salary_in_usd</div></div>
+          <div class="card kpi"><div class="label">Data Analyst median</div><div class="value">$90,320</div><div class="hint">119 role-group records</div></div>
+          <div class="card kpi"><div class="label">Fully remote share</div><div class="value">62.8%</div><div class="hint">381 of 607 salary records</div></div>
+          <div class="card kpi"><div class="label">Skill postings used</div><div class="value">668,704</div><div class="hint">Job posts with skill data</div></div>
+        </div>
+
+        <div class="grid three-col" style="margin-top:18px;">
+          <div class="card mini-card"><h3>Salary data quality</h3><div class="num">0%</div><p>Missing values in the cleaned salary dataset fields used for this dashboard.</p></div>
+          <div class="card mini-card"><h3>Skill vocabulary</h3><div class="num">252</div><p>Unique skills after cleaning and exploding the job_skills column.</p></div>
+          <div class="card mini-card"><h3>Top Data Analyst skill</h3><div class="num">SQL</div><p>Appears in 57.99% of Data Analyst postings with skill information.</p></div>
+        </div>
+
+        <div class="grid two-col" style="margin-top:18px;">
+          <div class="card">
+            <h3>Key finding</h3>
+            <div class="insight"><strong>Data Analyst is a strong entry path,</strong> but Data Scientist and Data Engineer dominate the broader dataset by role count. Data Analyst contributes 119 records or 19.60% of the salary role groups.</div>
+          </div>
+          <div class="card">
+            <h3>Career signal</h3>
+            <div class="insight green"><strong>The salary jump is mainly experience-driven.</strong> Median salary rises from $56,500 at entry level to $135,500 at senior level.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="salary">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Market Demand & Salary Benchmark</h2>
+            <p class="section-desc">Median salary is used as the main benchmark because salary data can contain extreme outliers.</p>
+          </div>
+        </div>
+        <div class="grid two-col">
+          <div class="card chart-card"><h3>Role demand</h3><div class="chart-wrap"><canvas id="roleDemandChart"></canvas></div><div class="chart-note">Data Scientist, Data Engineer, and Data Analyst are the three largest role groups.</div></div>
+          <div class="card chart-card"><h3>Median salary by role</h3><div class="chart-wrap"><canvas id="salaryRoleChart"></canvas></div><div class="chart-note">Data Architect has the highest median, but it only has 11 records, so it should be treated as a specialist role signal.</div></div>
+          <div class="card chart-card"><h3>Experience level impact</h3><div class="chart-wrap"><canvas id="experienceChart"></canvas></div><div class="chart-note">The biggest jump is Mid Level to Senior Level: +$58,560 or +76.11%.</div></div>
+          <div class="card chart-card"><h3>Remote work impact</h3><div class="chart-wrap"><canvas id="remoteChart"></canvas></div><div class="chart-note">Fully remote roles show the highest overall median salary at $115,000.</div></div>
+          <div class="card chart-card"><h3>Country compensation</h3><div class="chart-wrap"><canvas id="countryChart"></canvas></div><div class="chart-note">Countries are filtered to at least 5 salary records in the country salary analysis.</div></div>
+          <div class="card">
+            <h3>Salary growth table</h3>
+            <div class="table-wrap">
+              <table><thead><tr><th>Movement</th><th>Increase</th><th>Increase %</th></tr></thead><tbody>
+                <tr><td>Entry → Mid</td><td>$20,440</td><td>36.18%</td></tr>
+                <tr><td>Mid → Senior</td><td>$58,560</td><td>76.11%</td></tr>
+                <tr><td>Senior → Executive</td><td>$35,938</td><td>26.52%</td></tr>
+              </tbody></table>
+            </div>
+            <div class="insight warning" style="margin-top:16px;"><strong>Interpretation:</strong> experience level is one of the clearest salary drivers in this dataset.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="analyst">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Data Analyst Focus</h2>
+            <p class="section-desc">This section narrows the analysis to Data Analyst roles because this is the main career target of the project.</p>
+          </div>
+        </div>
+        <div class="grid two-col">
+          <div class="card chart-card"><h3>Data Analyst salary by experience</h3><div class="chart-wrap"><canvas id="daExperienceChart"></canvas></div><div class="chart-note">Executive Level has only 3 Data Analyst records, so it is shown but should be interpreted carefully.</div></div>
+          <div class="card chart-card"><h3>Data Analyst salary by remote setup</h3><div class="chart-wrap"><canvas id="daRemoteChart"></canvas></div><div class="chart-note">Fully remote Data Analyst roles have a median salary of $99,050.</div></div>
+          <div class="card chart-card"><h3>Data Analyst salary by country</h3><div class="chart-wrap"><canvas id="daCountryChart"></canvas></div><div class="chart-note">The United States leads Data Analyst compensation with a $105,000 median salary and 83 records.</div></div>
+          <div class="card">
+            <h3>Country salary table</h3>
+            <div class="table-wrap">
+              <table><thead><tr><th>Country</th><th>Records</th><th>Median salary</th><th>Average salary</th></tr></thead><tbody>
+<tr><td>United States</td><td>355</td><td>$135,000</td><td>$144,055</td></tr>
+
+<tr><td>Canada</td><td>30</td><td>$81,896</td><td>$99,824</td></tr>
+
+<tr><td>United Kingdom</td><td>47</td><td>$78,526</td><td>$81,583</td></tr>
+
+<tr><td>Germany</td><td>28</td><td>$78,015</td><td>$81,887</td></tr>
+
+<tr><td>Japan</td><td>6</td><td>$75,682</td><td>$114,127</td></tr>
+
+<tr><td>France</td><td>15</td><td>$56,738</td><td>$63,971</td></tr>
+
+<tr><td>Greece</td><td>11</td><td>$49,461</td><td>$52,293</td></tr>
+
+<tr><td>Spain</td><td>14</td><td>$48,372</td><td>$53,060</td></tr>
+
+<tr><td>India</td><td>24</td><td>$22,124</td><td>$28,582</td></tr></tbody></table>
+            </div>
+            <div class="insight warning" style="margin-top:16px;"><strong>Data caveat:</strong> the salary dataset is strongly dominated by United States records, so country insights represent this dataset rather than the entire global market.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="skills">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Skill Intelligence</h2>
+            <p class="section-desc">The skill analysis uses the job_skills field from the job-posting dataset. It answers the skill question directly, not through assumptions.</p>
+          </div>
+        </div>
+        <div class="grid three-col" style="margin-bottom:18px;">
+          <div class="card mini-card"><h3>Raw job postings</h3><div class="num">785,741</div><p>Total job posting records in the skill dataset.</p></div>
+          <div class="card mini-card"><h3>With skill data</h3><div class="num">668,704</div><p>Records used after keeping postings with job_skills.</p></div>
+          <div class="card mini-card"><h3>Exploded skill rows</h3><div class="num">3,594,898</div><p>One row per skill mention after cleaning.</p></div>
+        </div>
+        <div class="grid two-col">
+          <div class="card chart-card"><h3>Most required skills overall</h3><div class="chart-wrap"><canvas id="skillOverallChart"></canvas></div><div class="chart-note">SQL and Python appear in more than half of job postings with skill data.</div></div>
+          <div class="card chart-card"><h3>Most required skills for Data Analyst</h3><div class="chart-wrap"><canvas id="skillDAChart"></canvas></div><div class="chart-note">The core analyst stack is SQL, Excel, Python, Tableau, and Power BI.</div></div>
+        </div>
+
+        <div class="card" style="margin-top:18px;">
+          <h3>Skill matrix across roles</h3>
+          <p style="margin-bottom:14px;">Each cell shows the percentage of job postings for that role that mention the skill.</p>
+          <div class="table-wrap"><table><thead><tr><th>Skill</th><th>Data Analyst</th><th>Data Scientist</th><th>Data Engineer</th><th>Machine Learning Engineer</th></tr></thead><tbody><tr><th>SQL</th><td style='background:rgba(56,189,248,0.61)'><strong>58.0%</strong></td><td style='background:rgba(56,189,248,0.58)'><strong>54.2%</strong></td><td style='background:rgba(56,189,248,0.69)'><strong>66.8%</strong></td><td style='background:rgba(56,189,248,0.36)'><strong>28.6%</strong></td></tr>
+<tr><th>Python</th><td style='background:rgba(56,189,248,0.42)'><strong>35.9%</strong></td><td style='background:rgba(56,189,248,0.78)'><strong>78.0%</strong></td><td style='background:rgba(56,189,248,0.66)'><strong>63.8%</strong></td><td style='background:rgba(56,189,248,0.78)'><strong>79.5%</strong></td></tr>
+<tr><th>Excel</th><td style='background:rgba(56,189,248,0.48)'><strong>42.0%</strong></td><td style='background:rgba(56,189,248,0.22)'><strong>12.0%</strong></td><td style='background:rgba(56,189,248,0.16)'><strong>5.0%</strong></td><td style='background:rgba(56,189,248,0.16)'><strong>4.8%</strong></td></tr>
+<tr><th>Tableau</th><td style='background:rgba(56,189,248,0.37)'><strong>29.1%</strong></td><td style='background:rgba(56,189,248,0.29)'><strong>20.2%</strong></td><td style='background:rgba(56,189,248,0.21)'><strong>11.1%</strong></td><td style='background:rgba(56,189,248,0.15)'><strong>3.3%</strong></td></tr>
+<tr><th>Power BI</th><td style='background:rgba(56,189,248,0.33)'><strong>24.7%</strong></td><td style='background:rgba(56,189,248,0.21)'><strong>10.8%</strong></td><td style='background:rgba(56,189,248,0.21)'><strong>11.1%</strong></td><td style='background:rgba(56,189,248,0.14)'><strong>2.1%</strong></td></tr>
+<tr><th>R</th><td style='background:rgba(56,189,248,0.28)'><strong>18.8%</strong></td><td style='background:rgba(56,189,248,0.47)'><strong>40.9%</strong></td><td style='background:rgba(56,189,248,0.18)'><strong>7.5%</strong></td><td style='background:rgba(56,189,248,0.23)'><strong>12.9%</strong></td></tr>
+<tr><th>AWS</th><td style='background:rgba(56,189,248,0.17)'><strong>5.7%</strong></td><td style='background:rgba(56,189,248,0.27)'><strong>18.0%</strong></td><td style='background:rgba(56,189,248,0.43)'><strong>36.6%</strong></td><td style='background:rgba(56,189,248,0.38)'><strong>31.1%</strong></td></tr>
+<tr><th>Azure</th><td style='background:rgba(56,189,248,0.18)'><strong>6.8%</strong></td><td style='background:rgba(56,189,248,0.25)'><strong>14.9%</strong></td><td style='background:rgba(56,189,248,0.42)'><strong>35.8%</strong></td><td style='background:rgba(56,189,248,0.31)'><strong>22.4%</strong></td></tr>
+<tr><th>Spark</th><td style='background:rgba(56,189,248,0.15)'><strong>3.2%</strong></td><td style='background:rgba(56,189,248,0.26)'><strong>16.7%</strong></td><td style='background:rgba(56,189,248,0.39)'><strong>31.7%</strong></td><td style='background:rgba(56,189,248,0.31)'><strong>22.3%</strong></td></tr>
+<tr><th>Hadoop</th><td style='background:rgba(56,189,248,0.14)'><strong>2.6%</strong></td><td style='background:rgba(56,189,248,0.21)'><strong>10.7%</strong></td><td style='background:rgba(56,189,248,0.26)'><strong>17.0%</strong></td><td style='background:rgba(56,189,248,0.20)'><strong>9.8%</strong></td></tr>
+<tr><th>Airflow</th><td style='background:rgba(56,189,248,0.13)'><strong>1.3%</strong></td><td style='background:rgba(56,189,248,0.14)'><strong>2.7%</strong></td><td style='background:rgba(56,189,248,0.25)'><strong>15.1%</strong></td><td style='background:rgba(56,189,248,0.20)'><strong>9.6%</strong></td></tr>
+<tr><th>Tensorflow</th><td style='background:rgba(56,189,248,0.12)'><strong>0.5%</strong></td><td style='background:rgba(56,189,248,0.23)'><strong>13.1%</strong></td><td style='background:rgba(56,189,248,0.13)'><strong>1.4%</strong></td><td style='background:rgba(56,189,248,0.42)'><strong>35.4%</strong></td></tr>
+<tr><th>PyTorch</th><td style='background:rgba(56,189,248,0.12)'><strong>0.3%</strong></td><td style='background:rgba(56,189,248,0.21)'><strong>10.3%</strong></td><td style='background:rgba(56,189,248,0.13)'><strong>1.1%</strong></td><td style='background:rgba(56,189,248,0.43)'><strong>36.0%</strong></td></tr></tbody></table></div>
+        </div>
+
+        <div class="grid two-col" style="margin-top:18px;">
+          <div class="card chart-card"><h3>Remote vs non-remote skills</h3><div class="chart-wrap tall"><canvas id="remoteSkillChart"></canvas></div><div class="chart-note">Remote postings are stronger in AWS, Python, SQL, Snowflake, Spark, and Databricks.</div></div>
+          <div class="card">
+            <h3>Recommended Data Analyst skill priorities</h3>
+            <div class="table-wrap"><table><thead><tr><th>Skill</th><th>Priority</th><th>Demand</th><th>Median salary</th><th>Salary mentions</th></tr></thead><tbody>
+<tr>
+  <td><strong>SQL</strong></td>
+  <td><span class="pill core">Must-have core skills</span></td>
+  <td>57.99%</td>
+  <td>$92,500</td>
+  <td>3,079</td>
+</tr>
+
+<tr>
+  <td><strong>Excel</strong></td>
+  <td><span class="pill core">Must-have core skills</span></td>
+  <td>41.95%</td>
+  <td>$84,479</td>
+  <td>2,135</td>
+</tr>
+
+<tr>
+  <td><strong>Python</strong></td>
+  <td><span class="pill core">Must-have core skills</span></td>
+  <td>35.88%</td>
+  <td>$98,500</td>
+  <td>1,838</td>
+</tr>
+
+<tr>
+  <td><strong>Tableau</strong></td>
+  <td><span class="pill bi">BI & reporting tools</span></td>
+  <td>29.14%</td>
+  <td>$95,000</td>
+  <td>1,657</td>
+</tr>
+
+<tr>
+  <td><strong>Power BI</strong></td>
+  <td><span class="pill bi">BI & reporting tools</span></td>
+  <td>24.71%</td>
+  <td>$90,000</td>
+  <td>1,042</td>
+</tr>
+
+<tr>
+  <td><strong>Azure</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>6.85%</td>
+  <td>$100,000</td>
+  <td>312</td>
+</tr>
+
+<tr>
+  <td><strong>AWS</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>5.68%</td>
+  <td>$100,500</td>
+  <td>294</td>
+</tr>
+
+<tr>
+  <td><strong>Looker</strong></td>
+  <td><span class="pill bi">BI & reporting tools</span></td>
+  <td>3.93%</td>
+  <td>$104,000</td>
+  <td>259</td>
+</tr>
+
+<tr>
+  <td><strong>Snowflake</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>3.88%</td>
+  <td>$110,240</td>
+  <td>245</td>
+</tr>
+
+<tr>
+  <td><strong>Spark</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>3.16%</td>
+  <td>$111,175</td>
+  <td>187</td>
+</tr>
+
+<tr>
+  <td><strong>Hadoop</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>2.62%</td>
+  <td>$111,175</td>
+  <td>140</td>
+</tr>
+
+<tr>
+  <td><strong>GCP</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>2.13%</td>
+  <td>$111,175</td>
+  <td>78</td>
+</tr>
+
+<tr>
+  <td><strong>Databricks</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>1.98%</td>
+  <td>$110,000</td>
+  <td>101</td>
+</tr>
+
+<tr>
+  <td><strong>Airflow</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>1.26%</td>
+  <td>$111,175</td>
+  <td>72</td>
+</tr>
+
+<tr>
+  <td><strong>Kafka</strong></td>
+  <td><span class="pill premium">Premium technical skills</span></td>
+  <td>0.75%</td>
+  <td>$115,095</td>
+  <td>38</td>
+</tr></tbody></table></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px;">
+          <h3>Skill insight</h3>
+          <p>For Data Analyst roles, <strong>SQL</strong> is the strongest must-have skill at 57.99%. Excel, Python, Tableau, and Power BI complete the core analyst stack. Premium skills such as Snowflake, Spark, Hadoop, GCP, AWS, Azure, Databricks, Airflow, and Kafka appear less often, but their median salary values are higher in the salary-labeled subset.</p>
+          <div class="insight warning" style="margin-top:16px;"><strong>Salary-skill caveat:</strong> skill salary analysis uses only postings with salary_year_avg available. In the analysis, that subset contained 20,170 unique salary-labeled job postings, so the result should be read as an indicator, not a universal salary guarantee.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="opportunity">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Opportunity Score</h2>
+            <p class="section-desc">A simple recommendation score based on demand, median salary, and fully remote availability.</p>
+          </div>
+        </div>
+        <div class="grid two-col">
+          <div class="card chart-card"><h3>Opportunity score ranking</h3><div class="chart-wrap"><canvas id="opportunityChart"></canvas></div><div class="chart-note">Data Scientist and Data Engineer are almost tied at the top.</div></div>
+          <div class="card">
+            <h3>Scoring formula</h3>
+            <div class="formula">Opportunity Score = 40% Demand Score + 40% Salary Score + 20% Remote Score</div>
+            <p style="margin-top:16px;">The score is not a prediction model. It is a transparent ranking based only on the variables available in the salary dataset.</p>
+            <div class="insight" style="margin-top:16px;"><strong>Best overall score:</strong> Data Scientist leads with 74.05, followed by Data Engineer at 73.94. Data Analyst remains a practical career path with 61.56.</div>
+            <div class="insight warning" style="margin-top:16px;"><strong>Small-sample note:</strong> Data Architect scores high because of salary and remote percentage, but it has only 11 records.</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:18px;">
+          <h3>Opportunity score table</h3>
+          <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Role</th><th>Score</th><th>Demand</th><th>Median salary</th><th>Fully remote</th></tr></thead><tbody>
+<tr>
+  <td><span class="rank">1</span></td>
+  <td><strong>Data Scientist</strong></td>
+  <td>74.05</td>
+  <td>175</td>
+  <td>$104,890</td>
+  <td>53.71%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">2</span></td>
+  <td><strong>Data Engineer</strong></td>
+  <td>73.94</td>
+  <td>160</td>
+  <td>$107,400</td>
+  <td>67.50%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">3</span></td>
+  <td><strong>Data Architect</strong></td>
+  <td>62.51</td>
+  <td>11</td>
+  <td>$180,000</td>
+  <td>100.00%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">4</span></td>
+  <td><strong>Data Analyst</strong></td>
+  <td>61.56</td>
+  <td>119</td>
+  <td>$90,320</td>
+  <td>71.43%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">5</span></td>
+  <td><strong>Data Science Management</strong></td>
+  <td>50.58</td>
+  <td>33</td>
+  <td>$141,846</td>
+  <td>57.58%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">6</span></td>
+  <td><strong>Machine Learning / AI</strong></td>
+  <td>47.50</td>
+  <td>75</td>
+  <td>$87,425</td>
+  <td>54.67%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">7</span></td>
+  <td><strong>Analytics / BI</strong></td>
+  <td>44.67</td>
+  <td>17</td>
+  <td>$120,000</td>
+  <td>70.59%</td>
+</tr>
+
+<tr>
+  <td><span class="rank">8</span></td>
+  <td><strong>Other Data Role</strong></td>
+  <td>32.38</td>
+  <td>17</td>
+  <td>$70,000</td>
+  <td>64.71%</td>
+</tr></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Career Roadmap for Aspiring Data Analysts</h2>
+            <p class="section-desc">A practical learning path derived from the findings above.</p>
+          </div>
+        </div>
+        <div class="grid two-col roadmap">
+          <div class="card step"><h3>Build the core analyst stack</h3><p>Start with SQL, Excel, and Python because these skills have the highest demand for Data Analyst roles.</p></div>
+          <div class="card step"><h3>Add business reporting tools</h3><p>Learn Tableau or Power BI to turn analysis into dashboards and business-facing insights.</p></div>
+          <div class="card step"><h3>Upgrade into premium skills</h3><p>Move into AWS, Azure, GCP, Snowflake, Spark, Databricks, Airflow, and Kafka after the fundamentals are strong.</p></div>
+          <div class="card step"><h3>Choose a growth direction</h3><p>Use the analyst foundation to move toward Data Scientist, Data Engineer, Analytics Engineer, BI Analyst, or Data Architect paths.</p></div>
+        </div>
+        <div class="grid two-col" style="margin-top:18px;">
+          <div class="card"><h3>Final takeaway</h3><p>Data Analyst is a realistic and valuable entry path into the data field. The strongest strategy is to combine SQL, Python, visualization, business understanding, and gradual exposure to cloud and data engineering tools.</p></div>
+          <div class="card"><h3>Methodology limits</h3><p>The salary and skill datasets come from different sources and time coverage, so they are combined at the insight level rather than merged row by row. Country, Data Architect, and Executive-level insights should be read with sample size in mind.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="shell footer">Created by Muh. Shafwan Faiq R. • Data Science Project • Static HTML Dashboard</footer>
+  </main>
+
+  <script>
+    const DATA = {"roleSummary":[{"role_group":"Data Scientist","total":175,"percentage":28.83},{"role_group":"Data Engineer","total":160,"percentage":26.36},{"role_group":"Data Analyst","total":119,"percentage":19.6},{"role_group":"Machine Learning / AI","total":75,"percentage":12.36},{"role_group":"Data Science Management","total":33,"percentage":5.44},{"role_group":"Other Data Role","total":17,"percentage":2.8},{"role_group":"Analytics / BI","total":17,"percentage":2.8},{"role_group":"Data Architect","total":11,"percentage":1.81}],"salaryByRole":[{"role_group":"Data Architect","total_data":11,"median_salary":180000,"average_salary":177874},{"role_group":"Data Science Management","total_data":33,"median_salary":141846,"average_salary":138354},{"role_group":"Analytics / BI","total_data":17,"median_salary":120000,"average_salary":138461},{"role_group":"Data Engineer","total_data":160,"median_salary":107400,"average_salary":115048},{"role_group":"Data Scientist","total_data":175,"median_salary":104890,"average_salary":114576},{"role_group":"Data Analyst","total_data":119,"median_salary":90320,"average_salary":93200},{"role_group":"Machine Learning / AI","total_data":75,"median_salary":87425,"average_salary":108650},{"role_group":"Other Data Role","total_data":17,"median_salary":70000,"average_salary":93572}],"salaryByExp":[{"experience_label":"Entry Level","total_data":88,"median_salary":56500,"average_salary":61643},{"experience_label":"Mid Level","total_data":213,"median_salary":76940,"average_salary":87996},{"experience_label":"Senior Level","total_data":280,"median_salary":135500,"average_salary":138617},{"experience_label":"Executive Level","total_data":26,"median_salary":171438,"average_salary":199392}],"salaryGrowth":[{"from":"Entry \u2192 Mid","increase":"$20,440","pct":"36.18%"},{"from":"Mid \u2192 Senior","increase":"$58,560","pct":"76.11%"},{"from":"Senior \u2192 Executive","increase":"$35,938","pct":"26.52%"}],"salaryByRemote":[{"remote_label":"On-site","total_data":127,"median_salary":99000,"average_salary":106355},{"remote_label":"Hybrid","total_data":99,"median_salary":69999,"average_salary":80823},{"remote_label":"Fully Remote","total_data":381,"median_salary":115000,"average_salary":122457}],"countrySalary":[{"company_country":"United States","total_data":355,"median_salary":135000,"average_salary":144055},{"company_country":"Canada","total_data":30,"median_salary":81896,"average_salary":99824},{"company_country":"United Kingdom","total_data":47,"median_salary":78526,"average_salary":81583},{"company_country":"Germany","total_data":28,"median_salary":78015,"average_salary":81887},{"company_country":"Japan","total_data":6,"median_salary":75682,"average_salary":114127},{"company_country":"France","total_data":15,"median_salary":56738,"average_salary":63971},{"company_country":"Greece","total_data":11,"median_salary":49461,"average_salary":52293},{"company_country":"Spain","total_data":14,"median_salary":48372,"average_salary":53060},{"company_country":"India","total_data":24,"median_salary":22124,"average_salary":28582}],"daExp":[{"experience_label":"Entry Level","total_data":17,"median_salary":59102,"average_salary":57112},{"experience_label":"Mid Level","total_data":41,"median_salary":65438,"average_salary":77941},{"experience_label":"Senior Level","total_data":58,"median_salary":111912,"average_salary":112662},{"experience_label":"Executive Level","total_data":3,"median_salary":130000,"average_salary":130000}],"daRemote":[{"remote_label":"On-site","total_data":23,"median_salary":81666,"average_salary":84203},{"remote_label":"Hybrid","total_data":11,"median_salary":55000,"average_salary":51239},{"remote_label":"Fully Remote","total_data":85,"median_salary":99050,"average_salary":101065}],"daCountrySalary":[{"company_country":"United States","total_data":83,"median_salary":105000,"average_salary":112001},{"company_country":"Canada","total_data":11,"median_salary":71786,"average_salary":79936},{"company_country":"United Kingdom","total_data":6,"median_salary":51935,"average_salary":52712},{"company_country":"Greece","total_data":3,"median_salary":32974,"average_salary":32313},{"company_country":"Spain","total_data":3,"median_salary":32974,"average_salary":29098},{"company_country":"India","total_data":4,"median_salary":12257,"average_salary":12549}],"skillOverall":[{"skill":"sql","total_mentions":384849,"percentage":57.55},{"skill":"python","total_mentions":380909,"percentage":56.96},{"skill":"aws","total_mentions":145381,"percentage":21.74},{"skill":"azure","total_mentions":132527,"percentage":19.82},{"skill":"r","total_mentions":130892,"percentage":19.57},{"skill":"tableau","total_mentions":127213,"percentage":19.02},{"skill":"excel","total_mentions":127018,"percentage":18.99},{"skill":"spark","total_mentions":114609,"percentage":17.14},{"skill":"power bi","total_mentions":98147,"percentage":14.68},{"skill":"java","total_mentions":85612,"percentage":12.8},{"skill":"hadoop","total_mentions":64842,"percentage":9.7},{"skill":"scala","total_mentions":56886,"percentage":8.51},{"skill":"snowflake","total_mentions":55015,"percentage":8.23},{"skill":"databricks","total_mentions":53182,"percentage":7.95},{"skill":"gcp","total_mentions":50727,"percentage":7.59}],"skillDA":[{"skill":"sql","total_mentions":92428,"percentage":57.99},{"skill":"excel","total_mentions":66860,"percentage":41.95},{"skill":"python","total_mentions":57190,"percentage":35.88},{"skill":"tableau","total_mentions":46455,"percentage":29.14},{"skill":"power bi","total_mentions":39380,"percentage":24.71},{"skill":"r","total_mentions":29996,"percentage":18.82},{"skill":"sas","total_mentions":13999,"percentage":8.78},{"skill":"powerpoint","total_mentions":13822,"percentage":8.67},{"skill":"word","total_mentions":13562,"percentage":8.51},{"skill":"sap","total_mentions":11280,"percentage":7.08},{"skill":"azure","total_mentions":10913,"percentage":6.85},{"skill":"oracle","total_mentions":10387,"percentage":6.52},{"skill":"aws","total_mentions":9047,"percentage":5.68},{"skill":"sql server","total_mentions":8288,"percentage":5.2},{"skill":"go","total_mentions":7905,"percentage":4.96}],"skillMatrix":[{"skill":"sql","Data Analyst":57.99,"Data Scientist":54.17,"Data Engineer":66.8,"Machine Learning Engineer":28.65},{"skill":"python","Data Analyst":35.88,"Data Scientist":77.99,"Data Engineer":63.78,"Machine Learning Engineer":79.51},{"skill":"excel","Data Analyst":41.95,"Data Scientist":12.03,"Data Engineer":5.02,"Machine Learning Engineer":4.79},{"skill":"tableau","Data Analyst":29.14,"Data Scientist":20.19,"Data Engineer":11.08,"Machine Learning Engineer":3.31},{"skill":"power bi","Data Analyst":24.71,"Data Scientist":10.78,"Data Engineer":11.12,"Machine Learning Engineer":2.11},{"skill":"r","Data Analyst":18.82,"Data Scientist":40.85,"Data Engineer":7.47,"Machine Learning Engineer":12.91},{"skill":"aws","Data Analyst":5.68,"Data Scientist":18.01,"Data Engineer":36.64,"Machine Learning Engineer":31.07},{"skill":"azure","Data Analyst":6.85,"Data Scientist":14.86,"Data Engineer":35.83,"Machine Learning Engineer":22.42},{"skill":"spark","Data Analyst":3.16,"Data Scientist":16.66,"Data Engineer":31.68,"Machine Learning Engineer":22.29},{"skill":"hadoop","Data Analyst":2.62,"Data Scientist":10.66,"Data Engineer":17.01,"Machine Learning Engineer":9.8},{"skill":"airflow","Data Analyst":1.26,"Data Scientist":2.69,"Data Engineer":15.06,"Machine Learning Engineer":9.56},{"skill":"tensorflow","Data Analyst":0.48,"Data Scientist":13.14,"Data Engineer":1.35,"Machine Learning Engineer":35.35},{"skill":"pytorch","Data Analyst":0.3,"Data Scientist":10.31,"Data Engineer":1.06,"Machine Learning Engineer":36.05}],"remoteSkill":[{"skill":"aws","remote_percentage":28.62,"non_remote_percentage":21.01,"gap_remote_vs_non_remote":7.61},{"skill":"python","remote_percentage":63.42,"non_remote_percentage":56.28,"gap_remote_vs_non_remote":7.14},{"skill":"sql","remote_percentage":63.04,"non_remote_percentage":56.97,"gap_remote_vs_non_remote":6.06},{"skill":"snowflake","remote_percentage":12.43,"non_remote_percentage":7.78,"gap_remote_vs_non_remote":4.65},{"skill":"spark","remote_percentage":20.44,"non_remote_percentage":16.79,"gap_remote_vs_non_remote":3.65},{"skill":"databricks","remote_percentage":10.87,"non_remote_percentage":7.64,"gap_remote_vs_non_remote":3.23},{"skill":"azure","remote_percentage":21.78,"non_remote_percentage":19.61,"gap_remote_vs_non_remote":2.17},{"skill":"docker","remote_percentage":7.9,"non_remote_percentage":6.06,"gap_remote_vs_non_remote":1.84},{"skill":"kubernetes","remote_percentage":7.2,"non_remote_percentage":5.41,"gap_remote_vs_non_remote":1.79},{"skill":"pytorch","remote_percentage":5.23,"non_remote_percentage":3.96,"gap_remote_vs_non_remote":1.28},{"skill":"tensorflow","remote_percentage":5.43,"non_remote_percentage":4.91,"gap_remote_vs_non_remote":0.52},{"skill":"tableau","remote_percentage":18.62,"non_remote_percentage":19.07,"gap_remote_vs_non_remote":-0.44},{"skill":"power bi","remote_percentage":11.99,"non_remote_percentage":14.96,"gap_remote_vs_non_remote":-2.97},{"skill":"r","remote_percentage":16.74,"non_remote_percentage":19.87,"gap_remote_vs_non_remote":-3.14},{"skill":"excel","remote_percentage":14.63,"non_remote_percentage":19.46,"gap_remote_vs_non_remote":-4.83}],"skillRec":[{"skill":"sql","priority":"Must-have core skills","demand_percentage":57.99,"median_salary":92500,"salary_mentions":3079},{"skill":"excel","priority":"Must-have core skills","demand_percentage":41.95,"median_salary":84479,"salary_mentions":2135},{"skill":"python","priority":"Must-have core skills","demand_percentage":35.88,"median_salary":98500,"salary_mentions":1838},{"skill":"tableau","priority":"BI & reporting tools","demand_percentage":29.14,"median_salary":95000,"salary_mentions":1657},{"skill":"power bi","priority":"BI & reporting tools","demand_percentage":24.71,"median_salary":90000,"salary_mentions":1042},{"skill":"azure","priority":"Premium technical skills","demand_percentage":6.85,"median_salary":100000,"salary_mentions":312},{"skill":"aws","priority":"Premium technical skills","demand_percentage":5.68,"median_salary":100500,"salary_mentions":294},{"skill":"looker","priority":"BI & reporting tools","demand_percentage":3.93,"median_salary":104000,"salary_mentions":259},{"skill":"snowflake","priority":"Premium technical skills","demand_percentage":3.88,"median_salary":110240,"salary_mentions":245},{"skill":"spark","priority":"Premium technical skills","demand_percentage":3.16,"median_salary":111175,"salary_mentions":187},{"skill":"hadoop","priority":"Premium technical skills","demand_percentage":2.62,"median_salary":111175,"salary_mentions":140},{"skill":"gcp","priority":"Premium technical skills","demand_percentage":2.13,"median_salary":111175,"salary_mentions":78},{"skill":"databricks","priority":"Premium technical skills","demand_percentage":1.98,"median_salary":110000,"salary_mentions":101},{"skill":"airflow","priority":"Premium technical skills","demand_percentage":1.26,"median_salary":111175,"salary_mentions":72},{"skill":"kafka","priority":"Premium technical skills","demand_percentage":0.75,"median_salary":115095,"salary_mentions":38}],"opportunity":[{"role_group":"Data Scientist","total_data":175,"median_salary":104890,"remote_percentage":53.71,"opportunity_score":74.05},{"role_group":"Data Engineer","total_data":160,"median_salary":107400,"remote_percentage":67.5,"opportunity_score":73.94},{"role_group":"Data Architect","total_data":11,"median_salary":180000,"remote_percentage":100.0,"opportunity_score":62.51},{"role_group":"Data Analyst","total_data":119,"median_salary":90320,"remote_percentage":71.43,"opportunity_score":61.56},{"role_group":"Data Science Management","total_data":33,"median_salary":141846,"remote_percentage":57.58,"opportunity_score":50.58},{"role_group":"Machine Learning / AI","total_data":75,"median_salary":87425,"remote_percentage":54.67,"opportunity_score":47.5},{"role_group":"Analytics / BI","total_data":17,"median_salary":120000,"remote_percentage":70.59,"opportunity_score":44.67},{"role_group":"Other Data Role","total_data":17,"median_salary":70000,"remote_percentage":64.71,"opportunity_score":32.38}]};
+    const palette = ['#38bdf8','#a78bfa','#22c55e','#f59e0b','#fb7185','#60a5fa','#34d399','#f472b6','#c084fc','#facc15'];
+    Chart.defaults.color = '#cbd5e1';
+    Chart.defaults.borderColor = 'rgba(148, 163, 184, 0.16)';
+    Chart.defaults.font.family = 'Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif';
+
+    function money(v) { return '$' + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
+    function count(v) { return Number(v).toLocaleString(); }
+    function pct(v) { return Number(v).toFixed(2) + '%'; }
+    function sortAsc(arr, key) { return [...arr].sort((a,b) => a[key] - b[key]); }
+    function skillTitle(s) { const m = {'sql':'SQL','aws':'AWS','gcp':'GCP','r':'R','power bi':'Power BI','sql server':'SQL Server','sas':'SAS','sap':'SAP','pytorch':'PyTorch'}; return m[s] || s.replace(/\b\w/g, c => c.toUpperCase()); }
+
+    function barChart(id, labels, values, opts={}) {
+      const ctx = document.getElementById(id);
+      if (!ctx) return;
+      const horizontal = opts.horizontal ?? true;
+      const formatter = opts.money ? money : opts.percent ? pct : count;
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: opts.label || '',
+            data: values,
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,.12)',
+            backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+            borderRadius: 10,
+            barThickness: opts.barThickness || undefined
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: horizontal ? 'y' : 'x',
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => formatter(c.raw) } } },
+          scales: {
+            x: { grid: { color: 'rgba(148,163,184,.12)' }, ticks: { callback: v => opts.money ? '$' + Number(v).toLocaleString() : opts.percent ? v + '%' : Number(v).toLocaleString() } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    const roleDemand = sortAsc(DATA.roleSummary, 'total');
+    barChart('roleDemandChart', roleDemand.map(d=>d.role_group), roleDemand.map(d=>d.total));
+
+    const salaryRole = sortAsc(DATA.salaryByRole, 'median_salary');
+    barChart('salaryRoleChart', salaryRole.map(d=>d.role_group), salaryRole.map(d=>d.median_salary), { money: true });
+
+    barChart('experienceChart', DATA.salaryByExp.map(d=>d.experience_label), DATA.salaryByExp.map(d=>d.median_salary), { horizontal:false, money:true });
+    barChart('remoteChart', DATA.salaryByRemote.map(d=>d.remote_label), DATA.salaryByRemote.map(d=>d.median_salary), { horizontal:false, money:true });
+
+    const country = sortAsc(DATA.countrySalary, 'median_salary');
+    barChart('countryChart', country.map(d=>d.company_country), country.map(d=>d.median_salary), { money: true });
+
+    barChart('daExperienceChart', DATA.daExp.map(d=>d.experience_label), DATA.daExp.map(d=>d.median_salary), { horizontal:false, money:true });
+    barChart('daRemoteChart', DATA.daRemote.map(d=>d.remote_label), DATA.daRemote.map(d=>d.median_salary), { horizontal:false, money:true });
+    const daCountry = sortAsc(DATA.daCountrySalary, 'median_salary');
+    barChart('daCountryChart', daCountry.map(d=>d.company_country), daCountry.map(d=>d.median_salary), { money:true });
+
+    const skillOverall = sortAsc(DATA.skillOverall, 'percentage');
+    barChart('skillOverallChart', skillOverall.map(d=>skillTitle(d.skill)), skillOverall.map(d=>d.percentage), { percent:true });
+    const skillDA = sortAsc(DATA.skillDA, 'percentage');
+    barChart('skillDAChart', skillDA.map(d=>skillTitle(d.skill)), skillDA.map(d=>d.percentage), { percent:true });
+
+    const remoteLabels = DATA.remoteSkill.map(d=>skillTitle(d.skill)).reverse();
+    const remotePct = DATA.remoteSkill.map(d=>d.remote_percentage).reverse();
+    const nonRemotePct = DATA.remoteSkill.map(d=>d.non_remote_percentage).reverse();
+    new Chart(document.getElementById('remoteSkillChart'), {
+      type: 'bar',
+      data: { labels: remoteLabels, datasets: [
+        { label: 'Work From Home', data: remotePct, backgroundColor: '#38bdf8', borderRadius: 8 },
+        { label: 'On-site / Not Mentioned', data: nonRemotePct, backgroundColor: '#a78bfa', borderRadius: 8 }
+      ]},
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { tooltip: { callbacks: { label: c => c.dataset.label + ': ' + pct(c.raw) } } },
+        scales: { x: { ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } }
+      }
+    });
+
+    const opp = sortAsc(DATA.opportunity, 'opportunity_score');
+    barChart('opportunityChart', opp.map(d=>d.role_group), opp.map(d=>d.opportunity_score), { percent:false });
+  </script>
+</body>
+</html>
