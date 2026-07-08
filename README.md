@@ -29,15 +29,7 @@ The analysis was first conducted in Google Colab using Python, then the results 
 Add your deployed Streamlit link here:
 
 ```text
-https://your-streamlit-app-link.streamlit.app/
-```
-
----
-
-## Repository
-
-```text
-https://github.com/your-username/job-market-data-analyst-dashboard
+https://job-market-data-analyst-dashboard.streamlit.app/
 ```
 
 ---
