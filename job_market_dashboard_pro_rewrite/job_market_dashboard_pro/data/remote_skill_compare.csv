@@ -1,0 +1,16 @@
+skill,remote_percentage,non_remote_percentage,gap_remote_vs_non_remote
+aws,28.62,21.01,7.61
+python,63.42,56.28,7.14
+sql,63.04,56.97,6.06
+snowflake,12.43,7.78,4.65
+spark,20.44,16.79,3.65
+databricks,10.87,7.64,3.23
+azure,21.78,19.61,2.17
+docker,7.90,6.06,1.84
+kubernetes,7.20,5.41,1.79
+pytorch,5.23,3.96,1.28
+tensorflow,5.43,4.91,0.52
+tableau,18.62,19.07,-0.44
+power bi,11.99,14.96,-2.97
+r,16.74,19.87,-3.14
+excel,14.63,19.46,-4.83
